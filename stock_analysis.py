@@ -60,16 +60,16 @@ def get_avg_pct_change(stock_data):
 def get_profit_loss_percentage(stock_data):
     if stock_data.empty:
         return None
-    start_price = stock_data['Close'].iloc[0]  # First day's closing price
-    end_price = stock_data['Close'].iloc[-1]  # Last day's closing price
+    start_price = stock_data['Close'].iloc[0]
+    end_price = stock_data['Close'].iloc[-1]
     profit_loss = ((end_price - start_price) / start_price) * 100
-    return float(profit_loss)  # Ensure it returns a scalar value
+    return float(profit_loss)
 
 # Function to plot stock data
 def plot_stock_data(stock_data, ticker, interval):
     plt.figure(figsize=(20, 18))
 
-    # Price, Moving Averages, and Bollinger Bands
+    # Price and Moving Averages
     plt.subplot(5, 1, 1)
     plt.plot(stock_data.index, stock_data['Close'], label='Close Price', color='blue')
     plt.plot(stock_data.index, stock_data['7-Day MA'], label='7-Day MA', color='orange')
@@ -113,6 +113,7 @@ def plot_stock_data(stock_data, ticker, interval):
     plt.legend()
     plt.grid()
 
+    # Bollinger Bands
     plt.subplot(5,1,5)
     plt.plot(stock_data.index, stock_data['Upper Band'], label='Upper Bollinger Band', color='red', linestyle='--')
     plt.plot(stock_data.index, stock_data['Lower Band'], label='Lower Bollinger Band', color='purple', linestyle='--')
@@ -131,20 +132,17 @@ if __name__ == "__main__":
     st.title("Stock Analysis Dashboard")
     st.sidebar.header("User Input")
 
-    # Sidebar inputs
     ticker = st.sidebar.text_input("Enter Stock Ticker (e.g., AAPL)", value="AAPL")
     start_date = st.sidebar.date_input("Start Date", pd.to_datetime("2023-01-01"))
     end_date = st.sidebar.date_input("End Date", pd.to_datetime("2023-12-31"))
     interval = st.sidebar.selectbox("Select Timeframe", options=["1m", "5m", "15m", "1h", "4h", "1d"], index=5)
 
-    # Fetch data
     if st.sidebar.button("Analyze Stock"):
         data = get_stock_data(ticker, start_date, end_date, interval)
 
         if data.empty:
             st.error("No data available for the selected interval and date range.")
         else:
-            # Process data
             data = get_moving_averages(data)
             data = get_rsi(data)
             data = get_stoch_rsi(data)
@@ -153,15 +151,12 @@ if __name__ == "__main__":
             avg_percentage_change = get_avg_pct_change(data)
             profit_loss_percentage = get_profit_loss_percentage(data)
 
-            # Display summary stats
             st.subheader(f"{ticker} Stock Analysis Summary")
             st.write(f"**Overall Average Daily Percentage Change:** {avg_percentage_change:.2f}%")
             st.write(f"**Profit/Loss Over Timeframe:** {profit_loss_percentage:.2f}%")
 
-            # Display raw data
             st.subheader("Raw Data")
             st.dataframe(data[['Close', '7-Day MA', '30-Day MA', 'RSI', 'Daily % Change']].tail())
 
-            # Plot data
             st.subheader(f"{ticker} Stock Charts")
             st.pyplot(plot_stock_data(data, ticker, interval))
